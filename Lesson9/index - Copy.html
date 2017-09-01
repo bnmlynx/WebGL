@@ -1,0 +1,170 @@
+<html>
+<head>
+	<title>
+		Lesson 9
+	</title>
+
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+
+	</style>
+</head>
+
+<body>
+	<div class="container"></div>
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/1.19.1/TweenMax.min.js"></script>
+
+	<script>
+		var renderer, scene, camera; 
+		var controls;
+		var light;
+		var mesh;
+		var smokeParticles = [];
+		
+
+		function init() {
+			var fov = 75;
+			var aspect = window.innerWidth/window.innerHeight;
+			var near = 1;
+			var far = 10000;
+			clock = new THREE.Clock();
+
+			camera = new THREE.PerspectiveCamera(fov, aspect, near, far);
+			camera.position.z = 1000;
+
+			scene = new THREE.Scene();
+
+			renderer = new THREE.WebGLRenderer();
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+			
+			initSmoke();
+			initSmokeText();
+			initLight();
+
+			window.addEventListener('resize', onWindowResize, false);
+			window.addEventListener('mousewheel', MouseWheelHandler); // mousewheel 
+		}
+
+		function initSmoke() {
+
+			var texture = new THREE.TextureLoader().load('Smoke-Element.png');
+    		smokeMaterial = new THREE.MeshLambertMaterial({color: 0x00dddd, map: texture, transparent: true});
+  			smokeGeo = new THREE.PlaneGeometry(250,250);
+
+  				for (p = 0; p < 150; p++) {
+      				var particle = new THREE.Mesh(smokeGeo,smokeMaterial);
+       				particle.position.set(Math.random()*500-250,Math.random()*500-250,Math.random()*1000-100);
+        			particle.rotation.z = Math.random() * 360;
+        			scene.add(particle);
+        			smokeParticles.push(particle);
+    			}
+		}
+
+		/*function initSmokeText() {
+
+			var loader = new THREE.TextureLoader();
+			loader.load('smoke.png', function(texture) {
+				textMaterial = new THREE.MeshLambertMaterial({color: 0x00FFFFF, opacity: 1, map: texture,transparent: true, blending: THREE.AdditiveBlending});
+				textGeo = new THREE.PlaneGeometry(300,300);
+				text = new THREE.Mesh(textGeo, textMaterial);
+				text.position.z = 800;
+				scene.add(text);
+			});
+		}*/
+
+
+
+		function initSmokeText() {
+			var textLoader = new THREE.TextureLoader().load('smoke.png');
+			textMaterial = new THREE.MeshLambertMaterial({color: 0x00FFFFF, opacity: 1, map: textLoader, transparent: true, blending: THREE.AdditiveBlending });
+			textGeo = new THREE.PlaneGeometry(300,300);
+			text = new THREE.Mesh(textGeo, textMaterial);
+			text.position.z = 800;
+			scene.add(text);
+		}
+
+	
+
+		function evolveSmoke() {
+    		var sp = smokeParticles.length;
+   			while(sp--) {
+       			smokeParticles[sp].rotation.z += (delta * 0.25);
+    		}
+		}
+
+
+		function initLight() {
+			light = new THREE.DirectionalLight(0xffffff,0.5);
+   			light.position.set(-1,0,1);
+    		scene.add(light);
+		}
+
+		function onWindowResize(){
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+	
+		/*function moveCamera() {
+			var numIncrements = 1;
+			
+			var deltaY = -400;
+			var increment = deltaY * numIncrements;
+
+
+			//console.log(window.innerHeight);
+
+			TweenMax.to(camera.position, 4, {y: increment, ease: Expo.easeInOut});
+
+			numIncrements++;
+			//console.log(numIncrements);
+		} */
+
+
+		function MouseWheelHandler(e) {
+
+			// cross-browser wheel delta
+			var e = window.event || e; // old IE support
+			var delta = Math.max(-1, Math.min(1, (e.wheelDelta || -e.detail)));
+			
+			var deltaY = 200;
+			var increment = deltaY * delta;
+			var camPos = camera.position.clone();
+			var newCamPos =  camPos.add(new THREE.Vector3(0, increment, 0));
+
+			TweenMax.to(camera.position, 2, {y: newCamPos.y, ease: Expo.easeInOut});
+
+			//myimage.style.width = Math.max(50, Math.min(800, myimage.width + (30 * delta))) + "px";
+
+			//return false;
+		}
+
+		function animate() {
+			delta = clock.getDelta();
+			requestAnimationFrame(animate);
+			evolveSmoke();
+			//controls.update();
+			render();
+		}
+
+		function render() {
+			// body...
+
+			renderer.render(scene, camera);
+		}
+
+		init();
+		animate();
+
+	</script>	
+</body>
+</html>

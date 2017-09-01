@@ -1,0 +1,166 @@
+<html>
+<head>
+	<title>
+		Lesson 5 with Bruno
+	</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<div class="container"></div>
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+	<script>
+		var renderer, scene, camera; 
+		var controls;
+		var light;
+		var mesh;
+		var mesh2;
+		var slice;
+		var group = new THREE.Group();
+		var clone;
+		var clock = new THREE.Clock();
+
+
+		function init() {
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 100000);
+			camera.position.set(206, 108, 128);
+
+			scene = new THREE.Scene();
+
+			renderer = new THREE.WebGLRenderer({
+				antialias: true,
+			});
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+			initControls();
+			initObject();
+			initLight();
+		}
+
+
+		function initControls() {
+			controls = new THREE.TrackballControls(camera);
+		}
+
+
+		function initObject() {
+			//var geometry = new THREE.BoxGeometry(20, 20, 20);
+			var geometry = new THREE.IcosahedronGeometry(600, 0);
+			var material = new THREE.MeshStandardMaterial({
+				color: 0xFFFFFF,
+				roughness: 0.85,
+				metalness: 0.25,
+				emissive: 0x000000,
+				side: THREE.DoubleSide,
+				shading: THREE.FlatShading,
+				//wireframe: true,
+			})
+
+			mesh = new THREE.Mesh(geometry, material);
+
+			var geo = new THREE.IcosahedronGeometry(30, 0);
+			var mat = new THREE.MeshBasicMaterial({
+				color: 0x00FF00,
+				wireframe: true
+			})
+			mesh2 = new THREE.Mesh(geo, mat);
+
+
+			var cubeGeometry = new THREE.BoxGeometry( 100, 5, 100 );
+			var cubeMaterial = new THREE.MeshStandardMaterial( {color: 0x0000ff} );
+			slice = new THREE.Mesh( cubeGeometry, cubeMaterial );
+
+			for(var i = 0; i < 40; i++) {
+
+				clone = slice.clone();
+				clone.position.y = i * 5 - 100;
+				group.add(clone);
+			}
+			
+			//var slice =  
+
+			//mesh.material.side = 
+			//mesh.material.shading = THREE.FlatShading;
+
+			scene.add(mesh, group);
+
+		}
+
+
+		function initLight() {
+
+			//light = new THREE.AmbientLight( 0xe7f7fd );
+			light = new THREE.PointLight( 0xe7f7fd, 2, 1000, 2);
+			light2 = new THREE.PointLight(0x9cbafe, 1, 750, 2);
+			//light2 = new THREE.PointLight(0xff0000, 2.5, 100, 2 );
+			light.position.set(300, 230, 0);
+			light2.position.set(34, -100, 200);
+
+			//light2.position.set(0, 0, 0);
+			scene.add(light, light2);
+		}
+
+		
+
+
+		function animate() {
+
+			requestAnimationFrame(animate);
+
+
+
+			
+			var child = group.children[0];
+			var child2 = group.children[1];
+			var child3 = group.children[2];
+			var child4 = group.children[3];
+			
+			delta = clock.getDelta();
+			for (var i = 0, l = group.children.length; i < l; i++) {
+				var child = group.children[i];
+				child.rotation.y += Math.cos( delta * i * 0.1 ) * Math.sin( delta * i * 0.1 );
+
+			}
+
+			//child.rotation.y += Math.cos( delta * 2 * 0.1 ) * Math.sin( delta )
+			//child2.rotation.y += Math.cos( delta * 2 * 2 * 0.1 ) * Math.sin( delta * 2 );
+			//child3.rotation.y += Math.cos( delta * 2 * 3 * 0.1 ) * Math.sin( delta * 3 ); 
+			//child4.rotation.y += Math.cos( delta * 2 * 4 * 0.1 ) * Math.sin( delta * 4 ); 
+			/*for (var i = 0, l = group.children.length; i < l; i ++) {
+
+				delta += i * 5;
+				var child = group.children[i];
+				child.rotation.y = Math.cos( delta * 2 + i * 0.1 ) * Math.sin( delta );
+			}*/
+
+			group.rotation.z += 0.005;
+			mesh.rotation.x += 0.002;
+			mesh.rotation.y += 0.002;
+			mesh2.rotation.x += 0.001;
+			mesh2.rotation.y += 0.001;
+
+			controls.update();
+			render();
+		}
+
+		function render() {
+			renderer.render(scene, camera);
+			//console.log("render");
+		}
+
+		init();
+		animate();
+
+	</script>	
+</body>
+</html>

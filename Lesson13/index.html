@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - postprocessing - masking</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		<style>
+			body 
+			{
+				background-color: #000;
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+	</head>
+	<body>
+		<div class="container"></div>
+		<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+		<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+		<script>
+
+			var scene, camera, renderer;
+			
+			function init() {
+				renderer = new THREE.WebGLRenderer();
+				renderer.setPixelRatio(window.devicePixelRatio);
+				renderer.setSize(window.innerWidth, window.innerHeight);
+				document.querySelector(".container").appendChild( renderer.domElement );
+
+				camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 1, 10000);
+				camera.position.z = 100;
+				scene = new THREE.Scene();
+				scene.background =  new THREE.Color(0x191919);
+
+				initControls();
+				initObject();
+				initLight();
+			}
+
+
+			function initControls() {
+				controls = new THREE.TrackballControls(camera);
+			}
+
+			function initLight() {
+				light = new THREE.PointLight();
+				light.position.set(100, 100, 100);
+				scene.add(light);
+
+			}
+
+
+			function initObject() {
+
+				var geo = new THREE.SphereGeometry(25, 20, 20);
+				var mat = new THREE.MeshPhongMaterial({
+					color: 0x000000,
+					shading: THREE.FlatShading,
+					//wireframe: true
+				})
+				sphere = new THREE.Mesh(geo, mat);
+				scene.add(sphere);
+			}
+
+			function animate() {
+				requestAnimationFrame(animate);
+				controls.update();
+				render();
+			}
+
+
+			function render() {
+				renderer.render(scene, camera);
+
+			}
+
+			init();
+			animate();
+			
+			
+		</script>
+	</body>
+</html>

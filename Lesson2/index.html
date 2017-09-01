@@ -1,0 +1,130 @@
+<html>
+<head>
+	<title>
+		Lesson 2 with Bruno
+	</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<div class="container"></div>
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+
+	<script>
+		var renderer, scene, camera; 
+		var controls;
+		var light;
+		var meshes;
+
+		function init() {
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 10000);
+			camera.position.z = 100;
+
+			scene = new THREE.Scene();
+
+			renderer = new THREE.WebGLRenderer({
+				antialias: true,
+			});
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+			initControls();
+			initObject();
+			initLight();
+		}
+
+		function initControls() {
+			controls = new THREE.TrackballControls(camera);
+		}
+
+		function initObject() {
+			var cols = 11;
+			var rows = 5;
+			var w = 20;
+			var h = 20;
+			var d = 20;
+
+			var offset = 0; 
+			var totalWidth = (cols - 1) * (w + offset);
+			var totalHeight = (rows - 1) * (h + offset);
+
+			meshes = [];
+
+			var center = new THREE.Vector3();
+
+			for(var i = 0; i < cols*rows; i++) {
+				var geometry = new THREE.BoxGeometry(w, h, d);
+				//var geometry = new THREE.SphereGeometry(20, 20, 20);
+
+				//var material = new THREE.MeshBasicMaterial({
+				var material = new THREE.MeshLambertMaterial({
+					color: 0xFF0000,
+					//wireframe: true,
+				})
+
+				var x = (i % cols) * (w + offset) - totalWidth/2;
+				var y = Math.floor(i / cols)* (h + offset) - totalHeight/2;
+				//console.log(x, y);
+
+				var mesh = new THREE.Mesh(geometry, material);
+				mesh.position.x = x;
+				mesh.position.y = y;
+
+				//creating the wave
+
+				var dist = mesh.position.clone().sub(center);				
+				var angle = dist.angleTo(new THREE.Vector3(1,0,0));
+				
+				console.log(angle);
+
+				if(isNaN(angle)) angle = 0;
+				if(angle > Math.PI/2) angle = Math.PI - angle;
+				//mesh.angle = i * 0.1;
+				//mesh.angle = distx/totalWidth;
+				mesh.angle = angle;
+				//console.log(angle, dist);
+
+				scene.add(mesh);
+				meshes.push(mesh);
+			}
+		}
+
+		function initLight() {
+			light = new THREE.PointLight();
+			ambientLight =  new THREE.AmbientLight( 0x404040 );
+			light.position.set(50, 50, 50);
+			scene.add(light, ambientLight);
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+			
+			//mesh.rotation.y += 0.1;
+			for(var i = 0; i < meshes.length; i++) {
+				var mesh = meshes[i];
+				//mesh.position.y = Math.sin(mesh.angle) * 50;
+				mesh.position.z = Math.sin(mesh.angle) * 100;
+				mesh.angle += 0.02;
+
+			}
+			controls.update();
+			render();
+		}
+
+		function render() {
+			// body...
+			renderer.render(scene, camera);
+		}
+
+		init();
+		animate();
+	</script>	
+</body>
+</html>

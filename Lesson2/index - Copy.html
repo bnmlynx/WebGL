@@ -1,0 +1,181 @@
+<html>
+<head>
+	<title>
+		Lesson 2 with Bruno
+	</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<div class="container"></div>
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+
+	<script>
+		var renderer, scene, camera; 
+		var controls;
+		var light;
+		var meshes;
+
+		function init() {
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 10000);
+			camera.position.z = 100;
+
+			scene = new THREE.Scene();
+
+			renderer = new THREE.WebGLRenderer({
+				antialias: true,
+			});
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+			initControls();
+			spaceField();
+			alphaMaterial();
+			//initObject();
+			initLight();
+		}
+
+		function initControls() {
+			controls = new THREE.TrackballControls(camera);
+		}
+
+
+
+		function alphaMaterial() {
+			var geometry = new THREE.SphereGeometry(30, 20, 20);
+			var material = new THREE.MeshStandardMaterial({
+				color: "#444",
+				transparent: true,
+				side: THREE.DoubleSide,
+				alphaTest: 0.5,
+				opacity: 1,
+				roughtness: 1
+			});
+
+			//material.alphaMap = alphaMap;
+			/*var alphaMap = new THREE.TextureLoader().load('alpha.png');
+			material.alphaMap = alphaMap;
+			material.alphaMap.magFilter = THREE.NearestFilter;
+			material.alphaMap.wrapT = THREE.RepeatWrapping;
+			material.alphaMap.repeat.y = 1;
+			material.alphaMap.magFilter = THREE.NearestFilter;
+			material.alphaMap.wrapT = THREE.RepeatWrapping;
+			material.alphaMap.repeat.y = 1;
+*/
+			
+			var loader = new THREE.TextureLoader();
+			loader.load('alpha.png', function(texture) {
+				material.map = texture;
+			});
+			
+
+			var mesh = new THREE.Mesh(geometry, material);
+
+			scene.add(mesh);
+
+
+		}
+
+
+		function spaceField() {
+			var starsGeometry = new THREE.Geometry();
+
+			for ( var i = 0; i < 10000; i ++ ) {
+
+				var star = new THREE.Vector3();
+				star.x = THREE.Math.randFloatSpread( 2000 );
+				star.y = THREE.Math.randFloatSpread( 2000 );
+				star.z = THREE.Math.randFloatSpread( 2000 );
+
+				starsGeometry.vertices.push( star )
+
+			}
+
+			var starsMaterial = new THREE.PointsMaterial( { color: 0x888888 } )
+
+			var starField = new THREE.Points( starsGeometry, starsMaterial );
+
+			scene.add( starField );
+		}
+
+		function initObject() {
+			var cols = 10;
+			var rows = 5;
+			var w = 20;
+			var h = 20;
+			var d = 20;
+
+			var offset = 20; 
+			var totalWidth = cols * (w + offset);
+			var totalHeight = rows * (h + offset);
+
+			meshes = [];
+
+			var center = new THREE.Vector3();
+
+			for(var i = 0; i < cols*rows; i++) {
+				var geometry = new THREE.BoxGeometry(w, h, d);
+				//var geometry = new THREE.SphereGeometry(20, 20, 20);
+
+				//var material = new THREE.MeshBasicMaterial({
+				var material = new THREE.MeshLambertMaterial({
+					color: 0xFF0000,
+					wireframe: true,
+				})
+
+				var x = (i % cols) * (w + offset) - totalWidth/2;
+				var y = Math.floor(i / cols)* (h + offset) - totalHeight/2;
+				
+				var mesh = new THREE.Mesh(geometry, material);
+				mesh.position.x = x;
+				mesh.position.y = y;
+
+				var distx = mesh.position.x - (center.x);
+				var disty = mesh.position.y - (center.y);
+
+				mesh.angle = i * 0.1;
+				//mesh.angle = dist/totalWidth;
+
+				scene.add(mesh);
+				meshes.push(mesh);
+			}
+		}
+
+		function initLight() {
+			light = new THREE.PointLight();
+			light.position.set(50, 50, 50);
+			scene.add(light);
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+			
+			//mesh.rotation.y += 0.1;
+			
+			/*for(var i = 0; i < meshes.length; i++) {
+				var mesh = meshes[i];
+				mesh.position.z = Math.sin(mesh.angle) * 100;
+				mesh.angle += 0.1;
+
+			}*/
+			controls.update();
+			render();
+		}
+
+		function render() {
+			// body...
+			renderer.render(scene, camera);
+		}
+
+		init();
+		animate();
+	</script>	
+</body>
+</html>

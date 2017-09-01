@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>GLITCHING</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+
+<div class="container"></div>
+<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+
+<script src="https://threejs.org/examples/js/shaders/CopyShader.js"></script>
+<script src="https://threejs.org/examples/js/shaders/DotScreenShader.js"></script>
+<script src="https://threejs.org/examples/js/shaders/RGBShiftShader.js"></script>
+<script src="https://threejs.org/examples/js/shaders/DigitalGlitch.js"></script>
+
+<script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
+<script src="https://threejs.org/examples/js/postprocessing/GlitchPass.js"></script>
+
+
+<script>
+
+	var renderer, scene, camera, composer;
+
+	function init() {
+
+		renderer = new THREE.WebGLRenderer({antialias: true});
+		renderer.setClearColor(0x222222);
+		renderer.setSize(window.innerWidth, window.innerHeight);
+		document.querySelector(".container").appendChild(renderer.domElement);
+
+		scene = new THREE.Scene();
+		camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 10000);
+		camera.position.z = 200;
+
+		initShape();
+		//initLight();
+	}
+
+	function initShape() {
+
+		var geometry = new THREE.SphereGeometry(50, 10);
+		var material = new THREE.MeshLambertMaterial({
+		});
+
+		mesh = new THREE.Mesh(geometry, material);
+		scene.add(mesh);
+
+	}
+
+	function initLight() {
+
+		var light = new THREE.PointLight( 0xddffdd, 1.0 );
+		light.position.z = 70;
+		light.position.y = -70;
+		light.position.x = -70;
+		scene.add( light );
+	}
+
+	function animate() {
+
+		requestAnimationFrame(animate);
+
+		render();
+	}
+
+	function render() {
+		renderer.render(scene, camera);
+	}
+
+	init();
+	animate();
+
+</script>
+</body>
+</html>

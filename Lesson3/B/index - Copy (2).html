@@ -1,0 +1,184 @@
+<html>
+<head>
+	<title>
+		Lesson 3 with Bruno
+	</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<div class="container"></div>
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+	<script>
+		var renderer, scene, camera; 
+		var controls;
+		var light;
+		var sphere;
+		var vertexHeight = 10;
+		var clock = new THREE.Clock;
+
+
+		function init() {
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 10000);
+			camera.position.z = 100;
+
+			scene = new THREE.Scene();
+
+			renderer = new THREE.WebGLRenderer({
+				antialias: true,
+			});
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+			initControls();
+			initObject();
+			initLight();
+
+			window.addEventListener('resize', onWindowResize, false);
+			window.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		}
+
+		function initControls() {
+			controls = new THREE.TrackballControls(camera);
+		}
+
+		function initObject() {
+			
+			//box shape
+			var geometry = new THREE.BoxGeometry(150,50, 150);
+			var material = new THREE.MeshBasicMaterial( { 
+				color: 0xffff00,
+				wireframe: true,
+			});
+			var box = new THREE.Mesh( geometry, material );
+
+
+			//cylinder shape
+			var geom = new THREE.CylinderGeometry(10,10, 1000);
+			var mater = new THREE.MeshBasicMaterial( { 
+				color: 0xffff00,
+				wireframe: true,
+			});
+			var cylinder = new THREE.Mesh( geom, mater);
+			
+
+			//sphere shape
+			var geo = new THREE.SphereGeometry(500, 20, 20);
+			var mat = new THREE.MeshBasicMaterial({
+				color: 0xFF0000,
+				wireframe: true
+			})
+			sphere = new THREE.Mesh(geo, mat);
+
+
+			var g = new THREE.SphereGeometry(500, 20, 20);
+			var m = new THREE.MeshBasicMaterial({
+				color: 0xFF0000,
+				wireframe: true
+			})
+			sOriginal = new THREE.Mesh(g, m);
+
+			//add to scene
+			scene.add(sphere, box, cylinder);
+			//console.log(geometry.angles);
+		}
+
+
+		function updateVerts() {
+			for(var i = 0; i < sphere.geometry.vertices.length; i++) {
+				sphere.geometry.vertices[i].z += Math.random()*vertexHeight -(vertexHeight/2);
+				sphere.geometry.vertices[i].y += Math.random()*vertexHeight -(vertexHeight/2);
+				sphere.geometry.vertices[i].x += Math.random()*vertexHeight -(vertexHeight/2);
+			}
+			sphere.geometry.verticesNeedUpdate = true;
+		}
+
+		function updateVertices(z) {
+			for(var i = 0; i < sphere.geometry.vertices.length; i++) {
+				sphere.geometry.vertices[i].z +=  Math.random()*vertexHeight * z * 0.5 -(vertexHeight/2);
+				//sphere.geometry.vertices[i].y += Math.random()*vertexHeight -(vertexHeight/2);
+				//sphere.geometry.vertices[i].x += Math.random()*vertexHeight -(vertexHeight/2);
+			}
+			sphere.geometry.verticesNeedUpdate = true;
+		}
+
+		function pullTogether() {
+			for(var i = 0; i < sphere.geometry.vertices.length; i++){
+				var zVertices = sphere.geometry.vertices[i].z - sOriginal.geometry.vertices[i].z;
+				var subDir = sphere.geometry.vertices[i].z - (zVertices * 0.1);
+				sphere.geometry.vertices[i].z = subDir *0.5;
+			}
+		}
+
+
+		function initLight() {
+			light = new THREE.PointLight();
+			//ambientLight =  new THREE.AmbientLight( 0x404040 );
+			light.position.set(300, 299, 0);
+			scene.add(light);
+		}
+
+
+		function onWindowResize(){
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+
+		function onDocumentMouseMove( event ) {
+			
+			initialMouseX = event.clientX;
+			initialMouseY = event.clientY;	
+					
+			initialVector = new THREE.Vector2(initialMouseX, initialMouseY);
+			secondVector = new THREE.Vector2(previousMouseX, previousMouseY);
+
+			var dV = new THREE.Vector2();
+			dV.subVectors(secondVector, initialVector); 
+			//dV.crossVectors(secondVector, initialVector);
+			//console.log(dV);
+
+			z = ((dV.x) * (dV.x)) + ((dV.y) * (dV.y));
+			z = Math.sqrt(z);
+
+			updateVertices(z);
+
+			previousMouseX = event.clientX;
+			previousMouseY	= event.clientY;
+			//console.log(mouseY);
+		}
+
+
+		var previousMouseX; 
+		var previousMouseY; 
+
+
+		function animate() {
+			requestAnimationFrame(animate);
+			controls.update();
+			render();
+		}
+
+
+		function render() {
+			// body...
+
+			//updateVerts();
+			pullTogether();
+			renderer.render(scene, camera);
+		}
+
+		init();
+		animate();
+		
+	</script>	
+</body>
+</html>

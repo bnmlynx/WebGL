@@ -1,0 +1,127 @@
+<html>
+<head>
+	<title>
+		Lesson 5 with Bruno
+	</title>
+
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+
+<body>
+	<div class="container"></div>
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+
+	<script>
+		var renderer, scene, camera; 
+		var controls;
+		var light;
+		var mesh;
+		var group;
+
+
+		function init() {
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 100000);
+			camera.position.set(206, 108, 128);
+
+			scene = new THREE.Scene();
+
+			renderer = new THREE.WebGLRenderer({
+				antialias: true,
+			});
+
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+			initControls();
+			initObject();
+			initLight();
+		}
+
+
+		function initControls() {
+			controls = new THREE.TrackballControls(camera);
+		}
+
+
+		function initObject() {
+			//var geometry = new THREE.BoxGeometry(20, 20, 20);
+			var geometry = new THREE.IcosahedronGeometry(600, 0);
+			var material = new THREE.MeshStandardMaterial({
+				color: 0xFFFFFF,
+				roughness: 0.85,
+				metalness: 0.25,
+				emissive: 0x000000,
+				//wireframe: true,
+			})
+
+			var geo = new THREE.IcosahedronGeometry(30, 0);
+			var mat = new THREE.MeshBasicMaterial({
+				color: 0x00FF00,
+				wireframe: true
+			})
+
+
+			var planeGeometry = new THREE.PlaneGeometry( 50, 20, 32 );
+			var planeMaterial = new THREE.MeshBasicMaterial( {color: 0xffff00, side: THREE.DoubleSide} );
+			var plane = new THREE.Mesh( planeGeometry, planeMaterial );
+
+			var group = new THREE.Group();
+			//var slice =  
+
+
+			mesh = new THREE.Mesh(geometry, material);
+			mesh2 = new THREE.Mesh(geo, mat);
+			mesh.material.side = THREE.DoubleSide;
+			mesh.material.shading = THREE.FlatShading;
+
+			scene.add(mesh, mesh2, plane);
+
+
+		}
+
+
+		function initLight() {
+
+			//light = new THREE.AmbientLight( 0xe7f7fd );
+			light = new THREE.PointLight( 0xe7f7fd, 2, 1000, 2);
+			light2 = new THREE.PointLight(0x9cbafe, 1, 750, 2);
+			//light2 = new THREE.PointLight(0xff0000, 2.5, 100, 2 );
+			light.position.set(300, 230, 0);
+			light2.position.set(34, -100, 200);
+
+			//light2.position.set(0, 0, 0);
+			scene.add(light, light2);
+		}
+
+
+		function animate() {
+
+			requestAnimationFrame(animate);
+			mesh.rotation.x += 0.002;
+			mesh.rotation.y += 0.002;
+			mesh2.rotation.x += 0.001;
+			mesh2.rotation.y += 0.001;
+			controls.update();
+
+			render();
+		}
+
+		function render() {
+			// body...
+			renderer.render(scene, camera);
+		}
+
+		init();
+		animate();
+
+	</script>	
+</body>
+</html>

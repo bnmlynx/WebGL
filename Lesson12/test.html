@@ -1,0 +1,208 @@
+<html>
+<head>
+	<title>
+		Vertices Edititng
+
+	</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<div class="container"></div>
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+	<script>
+		var renderer, scene, camera; 
+		var controls;
+		var light;
+		var sphere;
+		var vertexHeight = 10;
+		var raycaster = new THREE.Raycaster();
+		var mouse = new THREE.Vector2(), INTERSECTED;
+
+
+		function init() {
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 10000);
+			camera.position.z = 2000;
+
+			scene = new THREE.Scene();
+
+			renderer = new THREE.WebGLRenderer({
+				antialias: true,
+			});
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+			initControls();
+			initObject();
+			initLight();
+
+			window.addEventListener('resize', onWindowResize, false);
+			window.addEventListener( 'mousemove', onDocumentMouseMove, false );
+		}
+
+		function initControls() {
+			controls = new THREE.TrackballControls(camera);
+		}
+
+		function initObject() {
+
+			//box shape
+			var geometry = new THREE.BoxGeometry(150,50, 150);
+			var material = new THREE.MeshBasicMaterial( { 
+				color: 0xffff00,
+				wireframe: true,
+				wireframeLinejoin: 'round'
+			});
+			var box = new THREE.Mesh( geometry, material );
+
+			//cylinder shape
+			var geom = new THREE.CylinderGeometry(10,10, 1000);
+			var mater = new THREE.MeshBasicMaterial( { 
+				color: 0xffff00,
+				wireframe: true,
+			});
+			var cylinder = new THREE.Mesh( geom, mater);
+			
+			//sphere shape
+			var geo = new THREE.SphereGeometry(500, 20, 20);
+			var mat = new THREE.MeshLambertMaterial({
+				color: 0xFF0000,
+				wireframe: true
+			})
+			sphere = new THREE.Mesh(geo, mat);
+
+			var g = new THREE.SphereGeometry(500, 20, 20);
+			var m = new THREE.MeshBasicMaterial({
+				color: 0xFF0000,
+				wireframe: true
+			})
+			sOriginal = new THREE.Mesh(g, m);
+
+			//add to scene
+			scene.add(sphere);
+			//console.log(geometry.angles);
+		}
+
+
+
+
+		function updateVertices(e) {
+			for(var i = 0; i < sphere.geometry.vertices.length; i++) {
+				sphere.geometry.vertices[i].z += Math.random() * vertexHeight * e * 0.5 - (vertexHeight/2);
+
+				//sphere.geometry.vertices[i].y += Math.random()*vertexHeight* z * 0.5 -(vertexHeight/2);
+				//sphere.geometry.vertices[i].x += Math.random()*vertexHeight* z * 0.5 -(vertexHeight/2);
+			}
+			sphere.geometry.verticesNeedUpdate = true;
+		}
+
+		function pullTogether() {
+			for(var i = 0; i < sphere.geometry.vertices.length; i++){
+				var zDisplacement = sphere.geometry.vertices[i].z - sOriginal.geometry.vertices[i].z;
+				var subtractDisplacement = sphere.geometry.vertices[i].z - (zDisplacement * 0.05);
+				sphere.geometry.vertices[i].z = subtractDisplacement;
+			}
+			sphere.geometry.verticesNeedUpdate = true;	
+		}
+
+
+		function initLight() {
+			//light = new THREE.PointLight();
+			light = new THREE.PointLight();
+			light.position.set(1000, 1000, 1000);
+
+			//ambientLight =  new THREE.AmbientLight( 0x404040 );
+			//light.position.set(300, 299, 0);
+			scene.add(light);
+		}
+
+
+		function onWindowResize(){
+			camera.aspect = window.innerWidth / window.innerHeight;
+			camera.updateProjectionMatrix();
+			renderer.setSize(window.innerWidth, window.innerHeight);
+		}
+
+		function onDocumentMouseMove(event) {
+			mouse.x = (event.clientX / window.innerWidth) * 2 -1;
+			mouse.y = - (event.clientY / window.innerHeight) * 2 - 1;
+		}
+
+
+
+
+		/*function onDocumentMouseMove( event ) {
+			
+			initialMouseX = event.clientX;
+			initialMouseY = event.clientY;	
+					
+			initialVector = new THREE.Vector2(initialMouseX, initialMouseY);
+			secondVector = new THREE.Vector2(previousMouseX, previousMouseY);
+
+			var dV = new THREE.Vector2();
+			dV.subVectors(secondVector, initialVector); 
+			//dV.crossVectors(secondVector, initialVector);
+			//console.log(dV);
+
+			z = ((dV.x) * (dV.x)) + ((dV.y) * (dV.y));
+			z = Math.sqrt(z);
+
+			updateVertices(z);
+
+			previousMouseX = event.clientX;
+			previousMouseY	= event.clientY;
+			//console.log(mouseY);
+		}*/
+
+
+		//var previousMouseX; 
+		//var previousMouseY; 
+
+
+		function animate() {
+			requestAnimationFrame(animate);
+			controls.update();
+			//pullTogether();
+			render();
+		}
+
+
+		function render() {
+			// body...
+
+			//updateVerts();
+			
+			raycaster.setFromCamera(mouse, camera);
+
+			var intersects = raycaster.intersectObjects(scene.children);
+
+			if ( intersects.length > 0 ) {
+					if ( INTERSECTED != intersects[ 0 ].object ) {
+						if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+						INTERSECTED = intersects[ 0 ].object;
+						INTERSECTED.currentHex = INTERSECTED.material.emissive.getHex();
+						INTERSECTED.material.emissive.setHex( 0xff0000 );
+						console.log("Happynening");
+					}
+				} else {
+					if ( INTERSECTED ) INTERSECTED.material.emissive.setHex( INTERSECTED.currentHex );
+					INTERSECTED = null;
+				}
+
+
+			renderer.render(scene, camera);
+		}
+
+		init();
+		animate();
+		
+	</script>	
+</body>
+</html>

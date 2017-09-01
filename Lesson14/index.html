@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<title>three.js webgl - postprocessing - masking</title>
+		<meta charset="utf-8">
+		<meta name="viewport" content="width=device-width, user-scalable=no, minimum-scale=1.0, maximum-scale=1.0">
+		
+		<style>
+			body 
+			{
+				margin: 0px;
+				overflow: hidden;
+			}
+		</style>
+
+	</head>
+	<body>
+		<div class="container"></div>
+		<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+		<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+
+		<script>
+		var group;
+		var particlesData = [];
+		var camera, scene, renderer;
+		var positions, colors;
+		var particles;
+		var pointCloud;
+		var particlePositions;
+		var lineMesh;
+
+		var maxParticleCount = 500;
+		var particleCount = 250;
+		var r = 400;
+		var rHalf = r / 2;
+
+		var effectController = {
+			showDots: true,
+			showLines: true,
+			minDistance: 75,
+			limitConnections: false,
+			maxConnections: 10,
+			particleCount: 250
+		}
+
+
+		function init() {
+
+			camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 1, 4000);
+			camera.position.z = 1000;
+
+			scene = new THREE.Scene();
+			scene.background =  new THREE.Color(0x000000);
+
+			group = new THREE.Group();
+			scene.add(group);
+
+
+			helper = new THREE.BoxHelper(new THREE.Mesh(new THREE.BoxGeometry(r, r, r) ) );
+			helper.material.color.setHex(0x080808);
+			helper.material.blending = THREE.AdditiveBlending;
+			helper.material.transparent = true;
+			group.add(helper);
+
+			//create box
+
+			var segments = maxParticleCount * maxParticleCount;
+
+			positions = new Float32Array( segments * 3);
+			colors = new Float32Array(segments * 3);
+
+			var pMaterial = new THREE.PointsMaterial({
+				color: 0xFFFFFF,
+				size: 3,
+				blending: THREE.AdditiveBlending,
+				transparent: true,
+				sizeAttenuation: false
+			});
+
+			particles = new THREE.BufferGeometry();
+			particlePositions = new Float32Array( maxParticleCount * 3);
+
+			for (var i = 0; i < maxParticleCount; i++) {
+				var x = Math.random() * r - r / 2;
+				var y = Math.random() * r - r / 2;
+				var z = Math.random() * r - r / 2;
+				
+				particlePositions[i * 3    ] = x;
+				particlePositions[i * 3 + 1] = y;
+				particlePositions[i * 3 + 2] = z;
+
+				particlesData.push({
+					velocity: new THREE.Vector3(-1 + Math.random() * 2, -1 + Math.random() * 2, -1 + Math.random() * 2),
+					numConnections: 0
+				});
+			}
+
+			particles.setDrawRange(0, particleCount);
+			particles.addAttribute('position', new THREE.BufferAttribute(particlePositions, 3).setDynamic(true));
+
+			pointCloud = new THREE.Points(particles, pMaterial);
+			group.add(pointCloud);
+
+			var geometry = new THREE.BufferGeometry();
+
+			geometry.addAttribute('position', new THREE.BufferAttribute(positions, 3).setDynamic(true));
+			geometry.addAttribute('color', new THREE.BufferAttribute(colors, 3).setDynamic(true));
+			geometry.computeBoundingSphere();
+
+			geometry.setDrawRange(0, 0);
+
+
+			var material = new THREE.LineBasicMaterial({
+				vertexColors: THREE.VertexColors,
+				blending: THREE.AdditiveBlending,
+				transparent: true
+			});
+
+			linesMesh = new THREE.LineSegments( geometry, material );
+			group.add(linesMesh);
+
+			renderer = new THREE.WebGLRenderer({ antialias: true});
+			renderer.setPixelRatio(window.devicePixelRatio);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+
+			renderer.gammaInput = true;
+			renderer.gammaOutput = true;
+
+
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+
+			initControls();
+		}
+
+
+		function initControls() {
+			controls = new THREE.TrackballControls(camera);
+		}
+
+		function animate() {
+			var vertexpos = 0; 
+			var colorpos = 0;
+			var numConnected = 0;
+
+			for(var i = 0; i < particleCount; i++) 
+				particlesData[i].numConnections = 0; 
+
+			for(var i = 0; i < particleCount; i++) {
+				var particleData = particlesData[i];
+
+				particlePositions[i * 3    ] += particleData.velocity.x;
+				particlePositions[i * 3 + 1] += particleData.velocity.y;
+				particlePositions[i * 3 + 2] += particleData.velocity.z;
+
+				if(particlePositions[i * 3 + 1] < -rHalf || particlePositions[i * 3 + 1] > rHalf ) 
+					particleData.velocity.y = -particleData.velocity.y;
+
+				if(particlePositions[i * 3    ] < -rHalf || particlePositions[i * 3] > rHalf )
+					particleData.velocity.x = -particleData.velocity.x;
+
+				if(particlePositions[i * 3 + 2] < -rHalf || particlePositions[i * 3 + 2] > rHalf )
+					particleData.velocity.z = -particleData.velocity.z;
+
+				//check for collisions 
+
+				for (var j = i + 1; j < particleCount; j++) {
+
+					var particleDataB = particlesData[j];
+
+					var dx = particlePositions[i * 3    ] - particlePositions[j * 3    ];
+					var dy = particlePositions[i * 3 + 1] - particlePositions[j * 3 + 1];
+					var dz = particlePositions[i * 3 + 2] - particlePositions[j * 3 + 2];
+					var dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+
+					if (dist < effectController.minDistance) {
+						
+						particleData.numConnections++;
+						particleDataB.numConnections++;
+
+						var alpha = 1.0 - dist / effectController.minDistance;
+
+						positions[ vertexpos++ ] = particlePositions[ i * 3     ];
+						positions[ vertexpos++ ] = particlePositions[ i * 3 + 1 ];
+						positions[ vertexpos++ ] = particlePositions[ i * 3 + 2 ];
+						
+						positions[ vertexpos++ ] = particlePositions[ j * 3     ];
+						positions[ vertexpos++ ] = particlePositions[ j * 3 + 1 ];
+						positions[ vertexpos++ ] = particlePositions[ j * 3 + 2 ];
+						
+						colors[ colorpos++ ] = alpha;
+						colors[ colorpos++ ] = alpha;
+						colors[ colorpos++ ] = alpha;
+						
+						colors[ colorpos++ ] = alpha;
+						colors[ colorpos++ ] = alpha;
+						colors[ colorpos++ ] = alpha;
+						
+						numConnected++;
+
+					}
+				}
+			}
+
+			linesMesh.geometry.setDrawRange( 0, numConnected * 2 );
+			linesMesh.geometry.attributes.position.needsUpdate = true;
+			linesMesh.geometry.attributes.color.needsUpdate = true;
+			
+			pointCloud.geometry.attributes.position.needsUpdate = true;
+
+			requestAnimationFrame(animate);
+			controls.update();
+			render();
+		}
+
+
+		function render () {
+			renderer.render(scene, camera);
+		}
+
+		init();
+		animate();
+			
+		</script>
+	</body>
+</html>

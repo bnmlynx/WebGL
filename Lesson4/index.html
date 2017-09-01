@@ -1,0 +1,101 @@
+<html>
+<head>
+	<title>
+		Lesson 4 with Bruno
+	</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<div class="container"></div>
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+
+	<script>
+		var renderer, scene, camera; 
+		var controls;
+		var light;
+		var mesh;
+		//https://threejs.org/examples/webgl_multiple_elements_text.html
+		
+		function init() {
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 10000);
+			camera.position.z = 100;
+
+			scene = new THREE.Scene();
+
+			renderer = new THREE.WebGLRenderer({
+				antialias: true,
+			});
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+			initControls();
+			initObject();
+			initLight();
+		}
+
+		function initControls() {
+			controls = new THREE.TrackballControls(camera);
+		}
+
+		function initObject() {
+			var path = "";
+			var format = '.jpg';
+			var urls = [
+					path + 'px' + format, path + 'nx' + format,
+					path + 'py' + format, path + 'ny' + format,
+					path + 'pz' + format, path + 'nz' + format
+				];
+
+			var reflectionCube = new THREE.CubeTextureLoader().load( urls );
+			reflectionCube.format = THREE.RGBFormat;
+			//scene.background = reflectionCube;	
+			
+			var geometry = new THREE.IcosahedronGeometry(100, 1);
+			var material = new THREE.MeshBasicMaterial({
+				color: 0x00FF00,
+				//wireframe: true,
+				envMap: reflectionCube,
+				//combine: THREE.MixOperation,
+				//reflectivity: 0.1,
+			})
+
+			mesh = new THREE.Mesh(geometry, material);
+			mesh.material.side = THREE.DoubleSide;
+			scene.add(mesh);
+
+		}
+
+		function initLight() {
+			light = new THREE.PointLight();
+			ambientLight =  new THREE.AmbientLight( 0x404040 );
+			light.position.set(50, 50, 50);
+			scene.add(light, ambientLight);
+		}
+
+		function animate() {
+			requestAnimationFrame(animate);
+
+
+			
+			controls.update();
+			render();
+		}
+
+		function render() {
+			// body...
+			renderer.render(scene, camera);
+		}
+
+		init();
+		animate();
+	</script>	
+</body>
+</html>

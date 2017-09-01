@@ -1,0 +1,129 @@
+<html>
+<head>
+	<title>Lesson 1 with Bruno</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+	<div class="container"></div>
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+	<script>
+		var scene, renderer, camera;
+		var time = 0;
+		var radiusX = 20;
+		var torus;
+		var canClone = false;
+		var prevAdjSineWave = 0;
+		var clones = [];
+		var torusPos;
+
+		function init() {
+
+			scene = new THREE.Scene();
+			camera = new THREE.OrthographicCamera(window.innerWidth * -0.5, window.innerWidth * 0.5, window.innerHeight * 0.5, window.innerHeight * -0.5, -100, 1000);
+			camera.position.z = 10;
+			scene.add(camera);
+
+			renderer = new THREE.WebGLRenderer({antialias: true});
+			renderer.setClearColor(0x222222);
+			renderer.setSize(window.innerWidth, window.innerHeight);
+			document.querySelector(".container").appendChild(renderer.domElement);
+
+			var geometry = new THREE.BoxGeometry(20,20,20);
+			var material = new THREE.MeshBasicMaterial({color: 0xffffff});
+
+			mesh = new THREE.Mesh(geometry, material);
+			scene.add(mesh);
+
+			initControls();
+			initTorus();
+		}
+
+		function initTorus() {
+
+			var width = window.innerWidth;
+			var halfWidth = width / 2;
+
+			var pos = camera.position.clone();
+			pos.project(camera);
+			pos.x = (pos.x * halfWidth) + halfWidth;
+			console.log(pos.x);
+
+			torus = new THREE.TorusGeometry( 150, 0.1, 2, 50 );
+			ring1 = new THREE.Mesh(torus, new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true, transparent: true, opacity: 1}));
+
+			ring1.position.x = -pos.x;
+			scene.add(ring1);
+
+			torusClone = new THREE.TorusGeometry( 150, 0.1, 2, 50 );
+			ringClone = new THREE.Mesh(torusClone, new THREE.MeshBasicMaterial({color: 0xffffff, wireframe: true, transparent: true, opacity: 1}));
+
+			ringClone.position.x = -pos.x;
+			//scene.add(ringClone);
+		}
+
+
+		function animate() {
+
+			requestAnimationFrame(animate);
+			var sineWave = mesh.position.x = Math.sin(time * 0.04) * radiusX;
+			var adjSineWave = sineWave * 0.05;
+			var clone;
+
+			ring1.scale.set(adjSineWave,adjSineWave,adjSineWave);
+			//ringClone.scale.set(adjSineWave,adjSineWave,adjSineWave);
+
+			if(canClone && adjSineWave < prevAdjSineWave) {
+				
+				canClone = false;
+			
+			 	clone = ringClone.clone();
+				clones.push(clone);
+				//scene.add(ring1);
+				
+				//console.log("clone");
+			} else {
+				
+				canClone = prevAdjSineWave < adjSineWave;
+			
+			}
+
+
+			for(var i = 0; i < clones.length; i++) {
+
+				scene.add(clones[i]);
+				clones[i].scale.x += (5 / 100);
+				clones[i].scale.y += (5 / 100);
+				//clones[i].material.opacity -= 0.001;
+
+			}
+
+			controls.update();
+			time++;
+			prevAdjSineWave = adjSineWave;
+			render();
+		}
+
+		function initControls() {
+
+			controls = new THREE.TrackballControls(camera);
+		}
+
+		function render() {
+
+			renderer.render(scene, camera);
+		}
+
+
+		init();
+		animate();
+	</script>	
+</body>
+</html>

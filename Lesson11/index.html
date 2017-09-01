@@ -1,0 +1,149 @@
+<html>
+<head>
+	<title>
+		Alpha Test
+	</title>
+	<style type="text/css">
+		body {
+			margin: 0;
+		}
+		.container {
+			overflow: hidden;
+		}
+	</style>
+</head>
+<body>
+
+	<div class="container"></div>
+
+	<script type="text/javascript" src="https://threejs.org/build/three.js"></script>
+	<script type="text/javascript" src="https://threejs.org/examples/js/controls/TrackballControls.js"></script>
+
+	<script src="https://threejs.org/examples/js/shaders/CopyShader.js"></script>
+	<script src="https://threejs.org/examples/js/shaders/DigitalGlitch.js"></script>
+
+	<script src="https://threejs.org/examples/js/postprocessing/EffectComposer.js"></script>
+	<script src="https://threejs.org/examples/js/postprocessing/RenderPass.js"></script>
+	<script src="https://threejs.org/examples/js/postprocessing/MaskPass.js"></script>
+	<script src="https://threejs.org/examples/js/postprocessing/ShaderPass.js"></script>
+	<script src="https://threejs.org/examples/js/postprocessing/GlitchPass.js"></script>
+	
+	<script>
+
+		var renderer, scene1, scene2, camera, camera2, composer; 
+		var controls;
+		var light;
+		var time = 0;
+
+		function init() {
+
+			camera = new THREE.PerspectiveCamera(50, window.innerWidth/window.innerHeight, 1, 10000);
+			camera.position.z = 100;
+
+			scene1 = new THREE.Scene();
+			scene1.background = new THREE.Color("#202020");
+			scene2 = new THREE.Scene();
+
+
+			renderer = new THREE.WebGLRenderer({
+				antialias: true,
+			});
+			renderer.autoClear = false;
+			renderer.setSize( window.innerWidth, window.innerHeight );
+			document.querySelector(".container").appendChild( renderer.domElement );
+
+
+			//Starfield///////////////////////////////////////////////////
+
+			var starsGeometry = new THREE.Geometry();
+			for ( var i = 0; i < 10000; i ++ ) {
+				var star = new THREE.Vector3();
+				star.x = THREE.Math.randFloatSpread( 2000 );
+				star.y = THREE.Math.randFloatSpread( 2000 );
+				star.z = THREE.Math.randFloatSpread( 2000 );
+				starsGeometry.vertices.push( star )
+			}
+
+			var starsMaterial = new THREE.PointsMaterial( { color: 0x888888 } )
+
+			var starField = new THREE.Points( starsGeometry, starsMaterial );
+			scene1.add( starField );
+
+			//Alpha shape////////////////////////////////////////////////
+
+			var imageAlpha = new THREE.TextureLoader().load('alpha.png');
+			imageAlpha.magFilter = THREE.NearestFilter;
+			imageAlpha.wrapT = THREE.RepeatWrapping;
+			imageAlpha.repeat.y = 2;
+
+			geometry = new THREE.IcosahedronGeometry(30, 5);
+			material = new THREE.MeshStandardMaterial({
+				color: "#444",
+				transparent: true,
+				side: THREE.DoubleSide,
+				alphaTest: 0.7,
+				alphaMap: imageAlpha,
+				opacity: 1,
+				roughness: 1,
+			});
+
+			mesh = new THREE.Mesh(geometry, material);
+			mesh.rotation.z = -Math.PI/4;
+			scene2.add(mesh);
+
+
+			composer = new THREE.EffectComposer(renderer);
+
+
+
+			initControls();
+			initLight()
+		}
+
+
+		function initControls() {
+
+			controls = new THREE.TrackballControls(camera);
+		}
+
+	
+		function initLight() {
+
+			light = new THREE.SpotLight("#fff", 0.8);
+			light.position.y = 100;
+			light.angle = 1.05;
+
+	        light.decacy = 2;
+        	light.penumbra = 1;
+
+        	light.shadow.camera.near = 10;
+        	light.shadow.camera.far = 1000;
+        	light.shadow.camera.fov = 30;
+			scene1.add(light);
+		}
+
+		function animate() {
+
+			requestAnimationFrame(animate);
+			controls.update();
+			render();		
+		}
+
+		function render() {	
+
+			time++;
+			light.position.x = Math.sin(time*0.01)*200;
+
+			mesh.material.alphaMap.offset.y = time*0.0015;
+			// body...
+			
+			composer.render();
+			//renderer.render(scene1, camera);
+		}
+
+
+		init();
+		animate();
+	</script>	
+</body>
+</html>
